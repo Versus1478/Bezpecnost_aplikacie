@@ -77,4 +77,15 @@ class AuthController extends Controller
             'message' => 'Používateľ bol odhlásený z aktuálneho zariadenia.',
         ], Response::HTTP_OK);
     }
+
+    public function logoutAll(Request $request)
+    {
+        $user = $request->user();
+
+        $user->tokens()->delete();
+
+        return response()->json([
+            'message' => 'Používateľ bol odhlásený zo všetkých zariadení.'
+        ], Response::HTTP_OK);
+    }
 }
