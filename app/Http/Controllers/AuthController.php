@@ -88,4 +88,32 @@ class AuthController extends Controller
             'message' => 'Používateľ bol odhlásený zo všetkých zariadení.'
         ], Response::HTTP_OK);
     }
+
+    public function changePassword(Request $request)
+    {
+        $validated = $request->validate([
+            'current_password' => ['required'],
+            'password' => [
+                'required',
+                'confirmed',
+                Password::min(12)->letters()->mixedCase()->numbers()->symbols()
+            ],
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($validated['current_password'], $user->password)) {
+            return response()->json([
+                'message' => 'Aktuálne heslo nie je správne.'
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $user->update([
+            'password' => $validated['password']
+        ]);
+
+        return response()->json([
+            'message' => 'Heslo bolo úspešne zmenené.'
+        ], Response::HTTP_OK);
+    }
 }

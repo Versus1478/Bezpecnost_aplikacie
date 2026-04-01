@@ -14,38 +14,44 @@ Route::prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/logout-all', [AuthController::class, 'logoutAll']);
-    });
-
-    Route::middleware(['auth:sanctum', 'verified'])->get('/verified', function () {
-        return 'ok';
+        Route::patch('/change-password', [AuthController::class, 'changePassword']);
     });
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-    // všetci prihlásení môžu čítať kategórie
-    Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
 
-    // iba admin môže vytvárať, upravovať, mazať kategórie
+    Route::get('categories', [CategoryController::class, 'index']);
+    Route::get('categories/{category}', [CategoryController::class, 'show']);
+
     Route::middleware('admin')->group(function () {
-        Route::apiResource('categories', CategoryController::class)->except(['index', 'show']);
+        Route::post('categories', [CategoryController::class, 'store']);
+        Route::put('categories/{category}', [CategoryController::class, 'update']);
+        Route::delete('categories/{category}', [CategoryController::class, 'destroy']);
+    });
+
+    Route::prefix('notes')->group(function () {
+        Route::get('stats/status', [NoteController::class, 'statsByStatus']);
+        Route::get('pinned', [NoteController::class, 'pinnedNotes']);
+        Route::get('recent/{days?}', [NoteController::class, 'recentNotes']);
+        Route::get('search', [NoteController::class, 'search']);
+        Route::patch('actions/archive-old-drafts', [NoteController::class, 'archiveOldDrafts']);
+
+        Route::patch('{id}/pin', [NoteController::class, 'pin']);
+        Route::patch('{id}/unpin', [NoteController::class, 'unpin']);
+        Route::patch('{id}/archive', [NoteController::class, 'archive']);
+        Route::patch('{id}/publish', [NoteController::class, 'publish']);
+    });
+
+    Route::apiResource('notes', NoteController::class);
+    Route::apiResource('notes.tasks', TaskController::class)->scoped();
+
+    Route::prefix('users/{user}')->group(function () {
+        Route::get('notes', [NoteController::class, 'userNotesWithCategories']);
+        Route::patch('notes/count', [NoteController::class, 'userNoteCount']);
+        Route::get('draft-notes', [NoteController::class, 'userDraftNotes']);
+    });
+
+    Route::middleware('verified')->get('/verified-check', function () {
+        return 'ok';
     });
 });
-
-Route::get('notes/stats/status', [NoteController::class, 'statsByStatus']);
-Route::get('notes/pinned', [NoteController::class, 'pinnedNotes']);
-Route::get('notes/recent/{days?}', [NoteController::class, 'recentNotes']);
-Route::get('notes-actions/search', [NoteController::class, 'search']);
-
-Route::apiResource('notes', NoteController::class);
-Route::apiResource('categories', CategoryController::class);
-Route::apiResource('notes.tasks', TaskController::class)->scoped();
-
-Route::patch('notes/actions/archive-old-drafts', [NoteController::class, 'archiveOldDrafts']);
-Route::patch('notes/{id}/pin', [NoteController::class, 'pin']);
-Route::patch('notes/{id}/unpin', [NoteController::class, 'unpin']);
-Route::patch('notes/{id}/archive', [NoteController::class, 'archive']);
-Route::patch('notes/{id}/publish', [NoteController::class, 'publish']);
-
-Route::get('users/{user}/notes', [NoteController::class, 'userNotesWithCategories']);
-Route::patch('users/{user}/notes/count', [NoteController::class, 'userNoteCount']);
-Route::get('users/{user}/draft-notes', [NoteController::class, 'userDraftNotes']);
