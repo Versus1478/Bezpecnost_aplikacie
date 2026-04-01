@@ -115,6 +115,7 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Heslo bolo úspešne zmenené.'
         ], Response::HTTP_OK);
+
     }
 
     public function updateProfile(Request $request)
@@ -132,5 +133,25 @@ class AuthController extends Controller
             'message' => 'Profil bol aktualizovaný.',
             'user' => $user
         ], Response::HTTP_OK);
+    }
+
+    public function uploadAvatar(Request $request)
+    {
+        $request->validate([
+            'avatar' => ['required', 'image', 'max:2048']
+        ]);
+
+        $user = $request->user();
+
+        $path = $request->file('avatar')->store('avatars', 'public');
+
+        $user->update([
+            'avatar' => $path
+        ]);
+
+        return response()->json([
+            'message' => 'Avatar bol nahraný.',
+            'avatar_url' => asset('storage/' . $path)
+        ]);
     }
 }
