@@ -116,4 +116,21 @@ class AuthController extends Controller
             'message' => 'Heslo bolo úspešne zmenené.'
         ], Response::HTTP_OK);
     }
+
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'first_name' => ['required', 'string', 'min:2', 'max:128'],
+            'last_name'  => ['required', 'string', 'min:2', 'max:128'],
+        ]);
+
+        $user->update($validated);
+
+        return response()->json([
+            'message' => 'Profil bol aktualizovaný.',
+            'user' => $user
+        ], Response::HTTP_OK);
+    }
 }
